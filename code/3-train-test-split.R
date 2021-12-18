@@ -1,12 +1,14 @@
 # read in the cleaned data
-covid_data = read_tsv("data/clean/covid_data.tsv")
+census_data = read_csv("data/clean/census_data.csv")
 
-# split into train and test (set seed here if applicable)
-test_states = c("Alabama", "Arizona", "Arkansas", 
-                "California", "Colorado", "Connecticut")
-covid_train = covid_data %>% filter(!(state %in% test_states))
-covid_test = covid_data %>% filter(state %in% test_states)
+set.seed(5) # seed set for reproducibility
+n = nrow(census_data)
+train_samples = sample(1:n, round(0.8*n))
+census_train <- census_data[train_samples,]
+census_test <- census_data[-train_samples,]
+
+nrow(census_train) + nrow(census_test) - n
 
 # save the train and test data
-write_tsv(x = covid_train, file = "data/clean/covid_train.tsv")
-write_tsv(x = covid_test, file = "data/clean/covid_test.tsv")
+write_csv(x = census_train, file = "data/clean/census_train.csv")
+write_csv(x = census_test, file = "data/clean/census_test.csv")

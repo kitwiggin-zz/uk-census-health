@@ -1,63 +1,118 @@
 # load libraries
-library(kableExtra)                     # for printing tables
+# library(kableExtra)                     # for printing tables
 library(cowplot)                        # for side by side plots
-library(lubridate)                      # for dealing with dates
-library(maps)                           # for creating maps
+# library(lubridate)                      # for dealing with dates
+# library(maps)                           # for creating maps
 library(tidyverse)
+library(scales)     # For formatting axis labels
+
+# Given this is random sample from census, histo for most variables to check
+# for potential significant bias
 
 # read in the cleaned data
-covid_data = read_tsv("data/clean/covid_data.tsv")
-
-# calculate median case fatality rate
-median_case_fatality_rate = covid_data %>%
-  summarise(median(case_fatality_rate)) %>%
-  pull()
+census_data = read_csv("data/clean/census_data.csv")
+census_train = read_csv("data/clean/census_train.csv")
 
 # create histogram of case fatality rate
-p = covid_data %>%
-  ggplot(aes(x = case_fatality_rate)) + 
+health_histo <- census_data %>%
+  ggplot(aes(x = `Health`)) + 
   geom_histogram() +
-  geom_vline(xintercept = median_case_fatality_rate,
-             linetype = "dashed") +
-  labs(x = "Case fatality rate (percent)", 
-       y = "Number of counties") +
+  labs(x = "Health score (1-5)") +
+  scale_y_continuous(name="Number of survey respondants", 
+                     labels = comma) +
   theme_bw()
-
-# save the histogram
-ggsave(filename = "results/response-histogram.png", 
-       plot = p, 
+# Save the histogram
+ggsave(filename = "results/health-histogram.png", 
+       plot = health_histo, 
        device = "png", 
        width = 5, 
        height = 3)
 
-# examine top 10 counties by case fatality rate
-covid_data %>% 
-  select(county, state, case_fatality_rate) %>%
-  arrange(desc(case_fatality_rate)) %>%
-  head(10) %>%
-  write_tsv("results/top-10-counties-data.tsv")
+# create histograms for other attributes
+fam_comp_histo <- census_data %>%
+  ggplot(aes(x = `Family Composition`)) + 
+  geom_histogram() +
+  labs(x = "Family Composition Category") +
+  scale_y_continuous(name="Num survey respondants", 
+                     labels = comma) +
+  theme_bw(base_size = 8)
 
-# create a heatmap of case fatality rate across the U.S.
-p = map_data("county") %>%
-  as_tibble() %>% 
-  left_join(case_data %>% 
-              rename(region = state, 
-                     subregion = county,
-                     `Case Fatality Rate` = case_fatality_rate) %>% 
-              mutate(region = str_to_lower(region), 
-                     subregion = str_to_lower(subregion)), 
-            by = c("region", "subregion")) %>%
-  ggplot() + 
-  geom_polygon(data=map_data("state"), 
-               aes(x=long, y=lat, group=group),
-               color="black", fill=NA,  size = 1, alpha = .3) + 
-  geom_polygon(aes(x=long, y=lat, group=group, fill = `Case Fatality Rate`),
-               color="darkblue", size = .1) +
-  scale_fill_gradient(low = "blue", high = "red") +
-  theme_void()
+marital_status_histo <- census_data %>%
+  ggplot(aes(x = `Marital Status`)) + 
+  geom_histogram() +
+  labs(x = "Marital Status Category") +
+  scale_y_continuous(name="Num survey respondants", 
+                     labels = comma) +
+  theme_bw(base_size = 8)
 
-ggsave(filename = "results/response-map.png", 
-       plot = p, 
+age_histo <- census_data %>%
+  ggplot(aes(x = `Age`)) + 
+  geom_histogram() +
+  labs(x = "Age Category") +
+  scale_y_continuous(name="Num survey respondants", 
+                     labels = comma) +
+  theme_bw(base_size = 8)
+
+ethnicity_histo <- census_data %>%
+  ggplot(aes(x = `Ethnic Group`)) + 
+  geom_histogram() +
+  labs(x = "Ethnic Group Category") +
+  scale_y_continuous(name="Num survey respondants", 
+                     labels = comma) +
+  theme_bw(base_size = 8)
+
+relig_histo <- census_data %>%
+  ggplot(aes(x = `Religion`)) + 
+  geom_histogram() +
+  labs(x = "Religion Category") +
+  scale_y_continuous(name="Num survey respondants", 
+                     labels = comma) +
+  theme_bw(base_size = 8)
+
+econ_activity_histo <- census_data %>%
+  ggplot(aes(x = `Economic Activity`)) + 
+  geom_histogram() +
+  labs(x = "Economic Activity Category") +
+  scale_y_continuous(name="Num survey respondants", 
+                     labels = comma) +
+  theme_bw(base_size = 8)
+
+attribute_histograms <- plot_grid(fam_comp_histo,
+                                  marital_status_histo,
+                                  age_histo,
+                                  ethnicity_histo,
+                                  relig_histo,
+                                  econ_activity_histo,
+                                  nrow = 2)
+
+ggsave(filename = "results/attribute-histos.png", 
+       plot = attribute_histograms, 
        device = "png", 
        width = 7, 
        height = 4)
+
+
+# Examine histograms of health category faceted by age
+mean_health_by_age <- census_train %>% 
+  group_by(`Age`) %>% 
+  summarise(mean_health_cat = mean(`Health`))
+
+mean_health_by_age
+
+health_by_age_histo <- census_train %>%
+  ggplot(aes(x = `Health`)) + 
+  geom_histogram() + 
+  scale_y_continuous(name="Number of survey respondants", labels = comma) +
+  facet_wrap(~ `Age`, nrow = 4) + 
+  geom_vline(data = mean_health_by_age, 
+             aes(xintercept = mean_health_cat), 
+             color = "red",
+             linetype = "dashed") + 
+  theme_bw()
+
+ggsave(filename = "results/health-by-age-histos.png", 
+       plot = health_by_age_histo, 
+       device = "png", 
+       width = 4, 
+       height = 8)
+
