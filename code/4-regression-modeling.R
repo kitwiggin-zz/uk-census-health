@@ -1,6 +1,7 @@
 # load libraries
 library(kableExtra)
 library(glmnetUtils)  # to run ridge and lasso
+library(tidyverse)
 source("code/functions/plot_glmnet.R") # for lasso/ridge trace plots
 source("code/functions/get_misclass_errors.R")
 
@@ -11,14 +12,14 @@ census_test = read_csv("data/clean/census_test.csv")
 
 # Run Univariate logistic regression using Age
 glm_fit_age <- glm(Health ~ Age, family = 'binomial', data = census_train)
-summary(glm_fit_age)
 
 save(glm_fit_age, file = "results/glm_fit_age.Rda")
 
 # Run multivariate logistic regression
 
 glm_fit_full <- glm(`Health` ~., family = 'binomial', data = census_train)
-coef(glm_fit_full)
+
+save(glm_fit_full, file = "results/glm_fit_full.Rda")
 
 fitted_probabilities <- predict(glm_fit_full, 
                                 newdata = census_test,
@@ -26,11 +27,11 @@ fitted_probabilities <- predict(glm_fit_full,
 
 glm_model_metrics <- get_misclass_errors(fitted_probabilities, census_test)
 
-write_csv(x = glm_model_metrics, file = "data/clean/glm-metrics-table.csv")
+write_csv(x = glm_model_metrics, file = "results/glm-metrics-table.csv")
 
 # Ridge penalised logistic regression
 set.seed(5)
-ridge_fit = cv.glmnet(`Health` ~ .,   
+ridge_fit <- cv.glmnet(`Health` ~ .,   
                       alpha = 0, 
                       nfolds = 10, 
                       family = 'binomial',
@@ -40,7 +41,7 @@ ridge_fit = cv.glmnet(`Health` ~ .,
 # save the ridge fit object
 save(ridge_fit, file = "results/ridge_fit.Rda")
 
-ridge_probabilities = predict(ridge_fit,
+ridge_probabilities <- predict(ridge_fit,
                         newdata = census_test,
                         s = "lambda.1se",
                         type = "response") %>%
@@ -48,15 +49,16 @@ ridge_probabilities = predict(ridge_fit,
 
 ridge_model_metrics <- get_misclass_errors(ridge_probabilities, census_test)
 
-write_csv(x = ridge_model_metrics, file = "data/clean/ridge-metrics-table.csv")
+write_csv(x = ridge_model_metrics, file = "results/ridge-metrics-table.csv")
 
-# create ridge CV plot
-ggsave(filename = "results/ridge-cv-plot.png", 
-       plot = plot(ridge_fit), 
-       device = "png", 
-       width = 6, 
-       height = 4)
-
+# create lasso CV plot
+png(width = 6, 
+    height = 4,
+    res = 300,
+    units = "in", 
+    filename = "results/ridge-cv-plot.png")
+plot(ridge_fit)
+dev.off()
 
 # create ridge trace plot
 ggsave(filename = "results/ridge-trace-plot.png", 
@@ -69,7 +71,7 @@ ggsave(filename = "results/ridge-trace-plot.png",
 
 # run lasso regression
 set.seed(5)
-lasso_fit = cv.glmnet(`Health` ~ .,   
+lasso_fit <- cv.glmnet(`Health` ~ .,   
                       alpha = 1, 
                       nfolds = 10, 
                       family = 'binomial',
@@ -87,14 +89,16 @@ lasso_probabilities = predict(lasso_fit,
 
 lasso_model_metrics <- get_misclass_errors(lasso_probabilities, census_test)
 
-write_csv(x = lasso_model_metrics, file = "data/clean/lasso-metrics-table.csv")
+write_csv(x = lasso_model_metrics, file = "results/lasso-metrics-table.csv")
 
 # create lasso CV plot
-ggsave(filename = "results/lasso-cv-plot.png", 
-       plot = plot(lasso_fit), 
-       device = "png", 
-       width = 6, 
-       height = 4)
+png(width = 6, 
+    height = 4,
+    res = 300,
+    units = "in", 
+    filename = "results/lasso-cv-plot.png")
+plot(lasso_fit)
+dev.off()
 
 # create lasso trace plot
 ggsave(filename = "results/lasso-trace-plot.png", 

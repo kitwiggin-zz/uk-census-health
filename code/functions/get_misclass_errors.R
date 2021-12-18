@@ -1,6 +1,12 @@
-get_misclass_errors <- function(fitted_probabilities, census_test) {
+get_misclass_errors <- function(fitted_probabilities, 
+                                census_test, 
+                                probabilities = TRUE) {
   
-  predictions <- as.numeric(fitted_probabilities > 0.5)
+  if (probabilities) {
+    predictions <- as.numeric(fitted_probabilities > 0.5)
+  } else {
+    predictions <- fitted_probabilities
+  }
   
   census_test <- census_test %>% 
     mutate(predicted_glm = predictions)

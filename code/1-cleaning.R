@@ -3,7 +3,7 @@
 library(tidyverse)
 
 # load raw case data
-census_data_raw = read_csv(file = "data/raw/census_data_raw.tsv")
+census_data_raw = read_csv(file = "data/raw/census_data_raw.csv")
 census_data_raw
 
 ## Clean Census data
