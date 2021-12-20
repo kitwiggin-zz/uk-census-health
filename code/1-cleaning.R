@@ -4,7 +4,6 @@ library(tidyverse)
 
 # load raw case data
 census_data_raw = read_csv(file = "data/raw/census_data_raw.csv")
-census_data_raw
 
 ## Clean Census data
 
@@ -13,23 +12,23 @@ census_data_tib <- as_tibble(census_data_raw)
 colnames(census_data_tib) = census_data_tib[1,]
 census_data_tib <- census_data_tib[-1,-1]
 
-# Look at -9 entries, when should they be treated as null and when should
-# they be treated as 'other'
-
-census_data_tib %>% 
+# Count the number of -9 entries for each feature
+count_nines_raw <- census_data_tib %>% 
   pivot_longer(cols = everything()) %>% 
   mutate(value = if_else(value == '-9',"-9","Informative")) %>% 
   count(name,value) %>% 
   pivot_wider(names_from = value,values_from = n)
+count_nines_raw
+write_csv(x = count_nines_raw, file = "results/count-nines-raw.csv")
 
 # It appears as though there are 6804 entries that consistently have -9 entries
 # These likely represent people not present for the survey - almost entirely
 # schoolchildren living away during term-time. So we remove these.
 # Also, all the work-related attributes are set to -9 if person is <16. This
 # is wasted info - create new factor level in work questions if person is under
-# 16
+# 16...
 # Remove Occupation due to likely lack of independence
-# Turn health into binary (4,5 = healthy, 1,2,3 = not)
+# Turn health into binary (1,2 = healthy, 3,4,5 = not)
 
 census_data_tib <- census_data_tib %>%
   select(- `Occupation`) %>%
@@ -46,10 +45,9 @@ census_data_tib <- census_data_tib %>%
     `Industry` == '-9', '0', `Industry`))
 
 # Convert column types to factors and factor types to be more descriptive
-# wherever possible to minimise amount of cross-referencing needed
-
+# wherever it's easy to try and minimize the amount of cross-referencing 
+# required
 census_data <- census_data_tib %>%
-  mutate_all(as.factor) %>%
   mutate(Region = fct_recode(Region, "North East" = "E12000001", 
              "North West" = "E12000002",
              "Yorkshire and the Humber" = "E12000003",

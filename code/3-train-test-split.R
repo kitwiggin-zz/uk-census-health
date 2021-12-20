@@ -7,8 +7,6 @@ train_samples = sample(1:n, round(0.8*n))
 census_train <- census_data[train_samples,]
 census_test <- census_data[-train_samples,]
 
-nrow(census_train) + nrow(census_test) - n
-
 # save the train and test data
 write_csv(x = census_train, file = "data/clean/census_train.csv")
 write_csv(x = census_test, file = "data/clean/census_test.csv")

@@ -1,0 +1,4 @@
+metric,classifier_performance
+Misclassification rate,0.16989882417281926
+False positive rate,0.5354453136387931
+False negative rate,0.06370334820168257
