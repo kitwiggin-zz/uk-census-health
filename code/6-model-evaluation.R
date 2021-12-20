@@ -1,6 +1,7 @@
 # load libraries
 library(glmnetUtils)
 library(tidyverse)
+source("code/functions/get_misclass_errors.R")
 
 # load data
 census_train = read_csv("data/clean/census_train.csv")
@@ -20,7 +21,7 @@ comparison <- tibble("Model" = "Uni-Log (Age)",
                      "FPR" = glm_age_t[2,2]$classifier_performance,
                      "FNR" = glm_age_t[3,2]$classifier_performance)
 
-comparison %>%
+final_comparison <- comparison %>%
   add_row(Model = "Multi-Log", 
           Misclass_Err = glm_t[1, 2]$classifier_performance, 
           FPR = glm_t[2,2]$classifier_performance, 
@@ -45,5 +46,25 @@ comparison %>%
           Misclass_Err = boost_t[1, 2]$classifier_performance, 
           FPR = boost_t[2,2]$classifier_performance, 
           FNR = boost_t[3, 2]$classifier_performance)
-  
-write_csv(x = comparison, file = "results/final-model-comparison.csv")
+
+write_csv(x = final_comparison, file = "results/final-model-comparison.csv")
+
+# Lazily check effect of changing threshold on model performance
+
+load("results/gbm-fit-opt.Rda")
+
+gbm_probabilities = predict(gbm_fit_opt,
+                            n.trees = opt_num_trees,
+                            type = "response",
+                            newdata = census_test)
+
+get_misclass_errors(gbm_probabilities, 
+                    census_test)$classifier_performance[1]
+
+get_misclass_errors(gbm_probabilities, 
+                    census_test,
+                    threshold = 0.4)$classifier_performance[1]
+
+get_misclass_errors(gbm_probabilities, 
+                    census_test,
+                    threshold = 0.6)$classifier_performance[1]

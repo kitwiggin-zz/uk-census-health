@@ -15,13 +15,25 @@ save(glm_fit_age, file = "results/glm_fit_age.Rda")
 
 age_probs <- predict(glm_fit_age, newdata = census_test, type = "response")
 
+# Use the misclass function to calculate a table of misclassification error
+# as well as false positive and false negative rate
 glm_age_model_metrics <- get_misclass_errors(age_probs, census_test)
 
+# Lazily check if increasing or decreasing the threshold slightly improves it
+high_thresh <- get_misclass_errors(age_probs, 
+                                   census_test, 
+                                   threshold = 0.6)$classifier_performance[1]
+high_thresh
+low_thresh <- get_misclass_errors(age_probs, 
+                                   census_test, 
+                                   threshold = 0.4)$classifier_performance[1]
+low_thresh
+
+# Save these errors (using the 0.5 threshold)
 write_csv(x = glm_age_model_metrics, 
           file = "results/glm-age-metrics-table.csv")
 
 # Run multivariate logistic regression
-
 glm_fit_full <- glm(`Health` ~., family = 'binomial', data = census_train)
 
 save(glm_fit_full, file = "results/glm_fit_full.Rda")

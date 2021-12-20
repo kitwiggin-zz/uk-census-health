@@ -1,9 +1,10 @@
 get_misclass_errors <- function(fitted_probabilities, 
                                 census_test, 
-                                probabilities = TRUE) {
+                                probabilities = TRUE,
+                                threshold = 0.5) {
   
   if (probabilities) {
-    predictions <- as.numeric(fitted_probabilities > 0.5)
+    predictions <- as.numeric(fitted_probabilities > threshold)
   } else {
     predictions <- fitted_probabilities
   }

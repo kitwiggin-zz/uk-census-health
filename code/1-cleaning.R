@@ -1,5 +1,4 @@
 # load libraries
-# library(lubridate)
 library(tidyverse)
 
 # load raw case data
@@ -18,7 +17,7 @@ count_nines_raw <- census_data_tib %>%
   mutate(value = if_else(value == '-9',"-9","Informative")) %>% 
   count(name,value) %>% 
   pivot_wider(names_from = value,values_from = n)
-count_nines_raw
+
 write_csv(x = count_nines_raw, file = "results/count-nines-raw.csv")
 
 # It appears as though there are 6804 entries that consistently have -9 entries

@@ -57,8 +57,6 @@ optimal_tree_info <- cp_table %>%
   arrange(nsplit) %>% 
   head(1)
 
-optimal_tree_info$nsplit
-
 optimal_tree <- prune(tree = tree_fit, cp = optimal_tree_info$CP)
 
 save(optimal_tree, file = "results/optimal_tree_fit.Rda")
@@ -137,7 +135,7 @@ for(i in 1:length(mvalues) ) {
   oob_errors[i] <- rf_fit$err.rate[ntree]
 }
 
-m_and_oob_errors = tibble(m = mvalues, oob_err = oob_errors)
+m_and_oob_errors <- tibble(m = mvalues, oob_err = oob_errors)
 rf_tune_mtry <- m_and_oob_errors %>%
   ggplot(aes(x = m, y = oob_err)) + 
   geom_line() +
@@ -183,9 +181,6 @@ write_csv(x = rf_tuned_metrics, file = "results/rf-tuned-metrics.csv")
 ## Boosting data cleaning
 census_train$Health <- as.numeric(as.character(census_train$Health))
 census_test$Health <- as.numeric(as.character(census_test$Health))
-
-train_half_sample = sample(1:nrow(census_train), round(0.5*nrow(census_train)))
-##
 
 set.seed(1) # for reproducibility
 # fit random forest with interaction depth 1 
